@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Petualangan Bulir Udara: Sistem Pernapasan</title>
+<style>
+*{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Trebuchet MS",Verdana,sans-serif;color:#2b2d42}
+body{background:linear-gradient(160deg,#d8f3ff,#a9d6ff 60%,#b8c0ff);display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+header{display:flex;justify-content:space-between;align-items:center;padding:1vh 2vw;font-size:clamp(18px,3.2vh,34px);font-weight:700;gap:2vw}
+.pill{background:#fff;border-radius:99px;padding:.3em .9em;box-shadow:0 4px 0 #0002}
+#map{position:relative;margin:0 4vw;height:9vh;display:flex;justify-content:space-between;align-items:center}
+#map:before{content:"";position:absolute;left:5%;right:5%;top:50%;height:1vh;background:#fff9;border-radius:9px}
+.st{position:relative;width:7vh;height:7vh;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:4vh;box-shadow:0 3px 0 #0003}
+.st.on{background:#8ac926}
+#me{position:absolute;top:-1vh;font-size:6vh;transition:left .9s cubic-bezier(.5,-.4,.5,1.4);animation:hop .6s infinite alternate;z-index:5}
+@keyframes hop{to{transform:translateY(-1.5vh) rotate(8deg)}}
+#stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:1vh 3vw 2vh;text-align:center}
+h1{margin:0;font-size:clamp(28px,7vh,80px);text-shadow:0 4px 0 #fff8}
+h2{margin:0;font-size:clamp(20px,4.2vh,46px)}
+.btn{font:inherit;font-weight:800;font-size:clamp(20px,4vh,44px);border:0;border-radius:24px;padding:.5em 1.2em;background:#ff6b35;color:#fff;box-shadow:0 8px 0 #b8431a;cursor:pointer;transition:transform .1s}
+.btn:active{transform:translateY(6px);box-shadow:0 2px 0 #b8431a}
+.btn.g{background:#38b000;box-shadow:0 8px 0 #1f6b00}
+.big{font-size:clamp(60px,16vh,180px);animation:hop .7s infinite alternate}
+.row{display:flex;gap:2vw;justify-content:center;width:100%;flex-wrap:wrap}
+.slot{background:#fff;border-radius:22px;padding:1vh 1vw;min-width:17vw;flex:1;max-width:30vw;box-shadow:0 5px 0 #0002;font-size:clamp(16px,3vh,32px);font-weight:700}
+.slot.s5{max-width:18vw;min-width:14vw}
+.drop{margin-top:1vh;min-height:8vh;border:4px dashed #ff6b35;border-radius:16px;display:grid;place-items:center;color:#ff6b35;font-size:4vh}
+.item{background:#4cc9f0;color:#023047;border-radius:20px;padding:1.3vh 2vw;font-size:clamp(18px,3.6vh,38px);font-weight:800;box-shadow:0 6px 0 #0a7ea4;cursor:grab;touch-action:none;position:relative;z-index:2}
+.item.drag{z-index:50;transform-origin:center;box-shadow:0 18px 20px #0005;cursor:grabbing}
+.item.done{background:#8ac926;box-shadow:none;padding:.8vh 1vw;font-size:clamp(16px,3vh,32px);animation:pop .4s}
+@keyframes pop{50%{transform:scale(1.25)}}
+.shake{animation:sh .4s}
+@keyframes sh{25%{transform:translateX(-2vw)}75%{transform:translateX(2vw)}}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:2vh 2vw;width:min(92vw,1300px)}
+.opt{font:inherit;font-weight:800;font-size:clamp(18px,3.6vh,40px);border:0;border-radius:22px;padding:1.6vh 1vw;background:#fff;box-shadow:0 7px 0 #0003;cursor:pointer}
+.opt:active{transform:translateY(5px)}
+.opt.ok{background:#8ac926;animation:pop .5s}.opt.no{background:#ff595e;color:#fff;animation:sh .4s}
+.q{font-size:clamp(22px,4.6vh,52px);font-weight:800;background:#fff;border-radius:26px;padding:2vh 2.5vw;max-width:92vw;box-shadow:0 6px 0 #0002}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1.6vh 1.2vw;width:min(94vw,1500px)}
+.num{font:inherit;font-weight:900;font-size:clamp(20px,5vh,56px);border:0;border-radius:20px;aspect-ratio:1.25;background:#4361ee;color:#fff;box-shadow:0 6px 0 #1d2f9c;cursor:pointer}
+.num.ok{background:#38b000;box-shadow:0 6px 0 #1f6b00}.num.no{background:#ff595e;box-shadow:0 6px 0 #a3262b}
+.num:disabled{cursor:default}
+#toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);background:#fff;border-radius:30px;padding:2vh 4vw;font-size:clamp(28px,7vh,80px);font-weight:900;box-shadow:0 10px 0 #0003;z-index:99;pointer-events:none;transition:transform .3s}
+#toast.show{transform:translate(-50%,-50%) scale(1)}
+.cf{position:fixed;top:-8vh;font-size:5vh;z-index:90;pointer-events:none;animation:fall 2.2s linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+.hint{font-size:clamp(14px,2.6vh,28px);opacity:.8}
+</style></head><body>
+<header><div class="pill" id="pt">⭐ 0</div><div class="pill" id="ti">💨 Petualangan Bulir Udara</div><div class="pill" id="lv">❤️❤️❤️</div><button class="pill" id="snd" style="border:0;font:inherit;cursor:pointer">🔊</button></header>
+<div id="map"></div>
+<div id="stage"></div><div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+let AC,mute=false;
+function tone(f,d,t,w,v){if(mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+(w||0);o.type=t||"sine";o.frequency.value=f;g.gain.setValueAtTime(v||.18,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d)}catch(e){}}
+const sfx={ok:()=>{tone(660,.12);tone(880,.2,"sine",.1)},no:()=>{tone(200,.25,"sawtooth");tone(140,.3,"sawtooth",.15)},clk:()=>tone(500,.06,"square",0,.08),win:()=>[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.25,"triangle",i*.14)),lose:()=>[400,330,260,180].forEach((f,i)=>tone(f,.3,"sawtooth",i*.2))};
+$("snd").onclick=()=>{mute=!mute;$("snd").textContent=mute?"🔇":"🔊"};
+const sh=a=>[...a].sort(()=>Math.random()-.5);
+const S={pts:0,lives:3,lv:0};
+const LV=[
+{t:"Hidung",e:"👃",type:"match",q:"Seret tulisan ke tugasnya yang tepat!",items:["Rambut hidung","Selaput lendir","Rongga hidung"],slots:["Menyaring debu kasar","Menangkap kuman & melembapkan udara","Menghangatkan udara"]},
+{t:"Saluran Napas",e:"🌬️",type:"match",q:"Urutkan jalan udara pernapasan! Seret ke nomor yang benar.",items:["Hidung","Faring","Laring","Trakea","Bronkus"],slots:["1","2","3","4","5"]},
+{t:"Paru-paru",e:"🫁",type:"mc",qs:[{q:"Pertukaran oksigen dan karbon dioksida terjadi di...",o:["Alveolus","Trakea","Laring","Hidung"],a:0},{q:"Saat kita menghirup udara, otot diafragma...",o:["Berkontraksi dan mendatar","Mengendur dan melengkung","Berhenti bergerak","Menyaring debu"],a:0}]},
+{t:"Alveolus",e:"🫧",type:"match",q:"Jodohkan zat dengan perannya dalam pernapasan!",items:["Oksigen (O₂)","Karbon dioksida (CO₂)","Hemoglobin"],slots:["Masuk dari paru-paru ke darah","Dibuang dari darah ke paru-paru","Mengikat oksigen di sel darah merah"]},
+{t:"Napas Sehat",e:"🌳",type:"mc",qs:[{q:"BENAR atau SALAH: Asap rokok dapat merusak paru-paru.",o:["Benar","Salah"],a:0},{q:"BENAR atau SALAH: Bernapas lewat mulut lebih baik daripada lewat hidung.",o:["Benar","Salah"],a:1}]}];
+const QZ=[
+["Organ utama pernapasan manusia adalah...",["Paru-paru","Lambung","Hati","Ginjal"],0],
+["Pertukaran gas terjadi di...",["Alveolus","Faring","Laring","Rongga hidung"],0],
+["Gas yang kita hirup dan dibutuhkan tubuh adalah...",["Oksigen","Karbon dioksida","Nitrogen","Hidrogen"],0],
+["Gas sisa yang dikeluarkan saat embuskan napas adalah...",["Karbon dioksida","Oksigen","Helium","Amonia"],0],
+["Saluran napas bercincin tulang rawan disebut...",["Trakea","Esofagus","Faring","Usus"],0],
+["Otot di bawah paru-paru yang membantu bernapas adalah...",["Diafragma","Bisep","Trisep","Jantung"],0],
+["Penutup saluran napas saat menelan adalah...",["Epiglotis","Bronkus","Alveolus","Lidah"],0],
+["Pita suara terdapat di...",["Laring","Trakea","Paru-paru","Hidung"],0],
+["Bernapas lewat hidung sehat karena udara...",["Disaring, dihangatkan, dilembapkan","Langsung ke paru-paru","Menjadi dingin","Menjadi kering"],0],
+["Zat berbahaya dalam rokok adalah...",["Tar dan nikotin","Vitamin C","Kalsium","Serat"],0],
+["Penyakit akibat menyempitnya saluran napas (bronkus) adalah...",["Asma","Diare","Maag","Cacar"],0],
+["Cara menjaga paru-paru tetap sehat adalah...",["Olahraga & hindari asap rokok","Merokok","Menahan napas lama","Tinggal di ruang berdebu"],0]];
+function hud(){$("pt").textContent="⭐ "+S.pts;$("lv").textContent="❤️".repeat(S.lives)+"🖤".repeat(3-S.lives)}
+function map(){$("map").innerHTML=LV.map((l,i)=>`<div class="st ${i<S.lv?"on":""}">${l.e}</div>`).join("")+`<div id="me">💨</div>`;const m=$("me");m.style.left=(S.lv<5?S.lv*20+4.5:90)+"%"}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1100)}
+function boom(){for(let i=0;i<26;i++){const c=document.createElement("div");c.className="cf";c.textContent=["🎉","⭐","✨","🍎","🥦"][i%5];c.style.left=Math.random()*96+"vw";c.style.animationDelay=Math.random()*.6+"s";document.body.appendChild(c);setTimeout(()=>c.remove(),3000)}}
+function hit(){S.lives--;hud();sfx.no();if(S.lives<=0){setTimeout(over,700)}}
+function add(n){S.pts+=n;hud()}
+function start(){S.pts=0;S.lives=3;S.lv=0;hud();map();$("stage").innerHTML=`<div class="big">💨</div><h1>Petualangan Bulir Udara</h1><h2>Ikuti perjalanan Bulir Udara di dalam tubuh manusia!<br>Kamu punya 3 ❤️. Kumpulkan ⭐ sebanyak-banyaknya!</h2><button class="btn" id="go">▶ MULAI</button>`;$("go").onclick=()=>{sfx.clk();level()}}
+function over(){sfx.lose();$("stage").innerHTML=`<div class="big">😵</div><h1>Nyawa Habis!</h1><h2>Skor: ⭐ ${S.pts}</h2><button class="btn" id="rt">🔁 COBA LAGI</button>`;$("rt").onclick=()=>{sfx.clk();start()}}
+function next(){S.lv++;map();boom();sfx.win();toast("Hebat! Lanjut ➜");setTimeout(()=>S.lv>=LV.length?quizIntro():level(),1800)}
+function level(){const L=LV[S.lv];$("ti").textContent=`${L.e} Stasiun ${S.lv+1}: ${L.t}`;L.type=="match"?matchGame(L):mcGame(L,0)}
+function matchGame(L){const n=L.items.length;
+$("stage").innerHTML=`<h2>${L.q}</h2><div class="row">${L.slots.map((s,i)=>`<div class="slot ${n>4?"s5":""}" data-i="${i}">${s}<div class="drop">?</div></div>`).join("")}</div><div class="row" id="tray">${sh(L.items.map((t,i)=>[t,i])).map(([t,i])=>`<div class="item" data-i="${i}">${t}</div>`).join("")}</div><div class="hint">Seret kartu biru ke kotak yang tepat 👆</div>`;
+let done=0;
+document.querySelectorAll(".item").forEach(el=>{el.onpointerdown=e=>{if(el.classList.contains("done"))return;e.preventDefault();el.setPointerCapture(e.pointerId);sfx.clk();const x0=e.clientX,y0=e.clientY;el.classList.add("drag");
+el.onpointermove=m=>{el.style.transform=`translate(${m.clientX-x0}px,${m.clientY-y0}px) scale(1.1)`};
+el.onpointerup=u=>{el.onpointermove=el.onpointerup=null;el.classList.remove("drag");el.style.pointerEvents="none";const t=document.elementFromPoint(u.clientX,u.clientY);el.style.pointerEvents="";const sl=t&&t.closest(".slot");
+if(sl&&!sl.querySelector(".done")&&sl.dataset.i==el.dataset.i){const d=sl.querySelector(".drop");d.innerHTML="";d.style.border="0";d.appendChild(el);el.style.transform="";el.classList.add("done");sfx.ok();add(10);if(++done==n)setTimeout(next,600)}
+else{el.style.transform="";if(sl){el.classList.add("shake");setTimeout(()=>el.classList.remove("shake"),400);hit()}}}}})}
+function mcGame(L,k){const Q=L.qs[k],o=sh(Q.o.map((t,i)=>[t,i]));let lock=0;
+$("stage").innerHTML=`<div class="big" style="font-size:12vh">${L.e}</div><div class="q">${Q.q}</div><div class="opts">${o.map(([t,i])=>`<button class="opt" data-c="${i==Q.a?1:0}">${t}</button>`).join("")}</div>`;
+document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(lock)return;if(b.dataset.c=="1"){lock=1;b.classList.add("ok");sfx.ok();add(15);setTimeout(()=>k+1<L.qs.length?mcGame(L,k+1):next(),900)}else{b.classList.add("no");b.disabled=true;hit()}})}
+function quizIntro(){$("ti").textContent="🏆 Kuis Kelas";$("stage").innerHTML=`<div class="big">🏆</div><h1>Kuis Seluruh Siswa!</h1><h2>32 siswa maju bergantian. Pilih nomor absen, jawab pertanyaan,<br>dan dapatkan 10 poin untuk jawaban benar!</h2><button class="btn g" id="qs">🎯 MULAI KUIS</button>`;$("qs").onclick=()=>{sfx.clk();Q.res={};Q.ord=sh(QZ);Q.i=0;quizGrid()}}
+const Q={res:{},ord:[],i:0};
+function quizGrid(){const n=Object.keys(Q.res).length,ok=Object.values(Q.res).filter(v=>v).length;$("lv").textContent="✅ "+ok+"/"+n;
+$("stage").innerHTML=`<h2>Pilih nomor absen kamu! (${n}/32 sudah maju)</h2><div class="grid">${Array.from({length:32},(_,i)=>{const r=Q.res[i+1];return `<button class="num ${r===undefined?"":r?"ok":"no"}" data-n="${i+1}" ${r===undefined?"":"disabled"}>${i+1}</button>`}).join("")}</div><button class="btn g" id="fin">🏁 SELESAI</button>`;
+document.querySelectorAll(".num").forEach(b=>b.onclick=()=>{sfx.clk();quizQ(+b.dataset.n)});$("fin").onclick=finish}
+function quizQ(no){const q=Q.ord[Q.i++%Q.ord.length],o=sh(q[1].map((t,i)=>[t,i]));let lock=0;
+$("stage").innerHTML=`<h2>🙋 Giliran siswa nomor ${no}</h2><div class="q">${q[0]}</div><div class="opts">${o.map(([t,i])=>`<button class="opt" data-c="${i==q[2]?1:0}">${t}</button>`).join("")}</div>`;
+document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{if(lock)return;lock=1;const c=b.dataset.c=="1";b.classList.add(c?"ok":"no");if(!c)document.querySelector('.opt[data-c="1"]').classList.add("ok");Q.res[no]=c;if(c){sfx.ok();add(10);boom()}else sfx.no();setTimeout(()=>Object.keys(Q.res).length>=32?finish():quizGrid(),1700)})}
+function finish(){const ok=Object.values(Q.res).filter(v=>v).length,n=Object.keys(Q.res).length;sfx.win();boom();$("ti").textContent="🏁 Selesai";
+$("stage").innerHTML=`<div class="big">🎉</div><h1>Kuis Selesai!</h1><h2>Jawaban benar kelas: ${ok} dari ${n} siswa<br>Total poin: ⭐ ${S.pts}</h2><button class="btn" id="ag">🔁 MAIN LAGI</button>`;$("ag").onclick=()=>{$("ti").textContent="💨 Petualangan Bulir Udara";start()}}
+start();
+</script></body></html>
